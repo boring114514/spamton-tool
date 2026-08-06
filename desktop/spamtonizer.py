@@ -98,7 +98,7 @@ CN_PRICES = [
     "2002", "0.99", "一元", "二十", "八八", "三折", "统统免费",
 ]
 
-CN_PUNCT = ["...", "!!", "!!!", "??", "?!", "!!!!"]
+CN_PUNCT = [".", "...", "!", "!!", "?", "?", "~", "~"]
 
 def spamtonize_cn(text, intensity=1.0, filler=True, price=True):
     rng = random.Random()
@@ -106,8 +106,6 @@ def spamtonize_cn(text, intensity=1.0, filler=True, price=True):
     if not raw:
         return ""
     out_parts = []
-    if filler and rng.random() < 0.7 * intensity:
-        out_parts.append(rng.choice(CN_INTERJ))
     words = re.findall(r"[A-Za-z0-9']+|[.,!?。，！？；：、…<>]|.", raw)
     built = []
     idx = 0
@@ -124,17 +122,17 @@ def spamtonize_cn(text, intensity=1.0, filler=True, price=True):
             cur = rng.choice([x for x in CN_PRICES if x not in used_p] or CN_PRICES)
             used_p.add(cur)
         if rng.random() < 0.06 * intensity:
-            cur = cur + rng.choice(["!!", "??", "!!!", "(真的)"])
+            cur = cur + rng.choice(["!", "?", "...", "."])
         # random character repetition for emphasis
-        if rng.random() < 0.04 * intensity and len(cur) == 1 and re.match(r"[\u4e00-\u9fff]", cur):
+        if rng.random() < 0.03 * intensity and len(cur) == 1 and re.match(r"[\u4e00-\u9fff]", cur):
             cur = cur * rng.randint(2, 2)
-        if rng.random() < 0.1 * intensity:
+        if rng.random() < 0.06 * intensity:
             pick = rng.choice([b for b in CN_BRACKET if b not in used_cn] or CN_BRACKET)
             used_cn.add(pick)
             built.append("[[" + pick + "]]")
         built.append(cur)
         idx += 1
-        if idx % 5 == 0 and rng.random() < 0.2 * intensity:
+        if idx % 6 == 0 and rng.random() < 0.14 * intensity:
             built.append(rng.choice(CN_PUNCT))
     joined = re.sub(r"\s+", "", "".join(built))
     out_parts.append(joined)
@@ -171,15 +169,15 @@ def _maybe_bracket(word, rng, intensity):
 
 def _punct(rng):
     r = rng.random()
-    if r < 0.28:
+    if r < 0.3:
         return "..."
-    if r < 0.5:
-        return "!!"
-    if r < 0.68:
-        return "!!!"
-    if r < 0.85:
-        return "??"
-    return "..."
+    if r < 0.55:
+        return "."
+    if r < 0.75:
+        return "!"
+    if r < 0.9:
+        return "?"
+    return "~"
 
 def spamtonize(text, intensity=1.0, filler=True, price=True):
     raw = re.sub(r"\s+", " ", text).strip()
@@ -190,9 +188,6 @@ def spamtonize(text, intensity=1.0, filler=True, price=True):
     rng = random.Random()
     sentences = re.findall(r"[^.!?]+[.!?]*", raw) or [raw]
     out_parts = []
-    
-    if filler and rng.random() < 0.6 * intensity:
-        out_parts.append(rng.choice(INTERJECTIONS))
 
     i = 0
     used_cn = set()
@@ -210,18 +205,18 @@ def spamtonize(text, intensity=1.0, filler=True, price=True):
                 used_p.add(cw)
             if rng.random() < 0.05 * intensity:
                 cw = cw.upper() + " " + rng.choice(REGARDS).upper()
-            if rng.random() < 0.18 * intensity:
+            if rng.random() < 0.1 * intensity:
                 pick = rng.choice([b for b in BRACKET_WORDS if b not in used_cn] or BRACKET_WORDS)
                 used_cn.add(pick)
                 new_words.append(pick if "[" in pick else "[[" + pick + "]]")
                 i += 1
             new_words.append(cw)
             i += 1
-            if i % 4 == 0 and rng.random() < 0.25 * intensity:
+            if i % 6 == 0 and rng.random() < 0.18 * intensity:
                 new_words.append(_punct(rng))
         joined = " ".join(new_words)
         joined = joined.rstrip(". ").rstrip()
-        out_parts.append(joined + rng.choice(["!!", "!", "...", "!!", "?!", "??!"]))
+        out_parts.append(joined + rng.choice([".", "...", "!", "?", "?", "...", "!"]))
 
     final = " ".join(out_parts)
 

@@ -207,9 +207,8 @@ const CN_PRICES = [
   "99.95","199.99","115.5","79.99","免费","白送",
   "2002","0.99","一元","二十","八八","三折","统统免费"
 ];
-const CN_PUNCT = ["...","!!","!!!","??","?!","!!!!"];
-
-const EN_PUNCT = ["...","!!","!!!","??","?!","...","!!"];
+const CN_PUNCT = [".", "...", "!", "!!", "?", "?", "~", "~"];
+const EN_PUNCT = [".", "...", "!", "?", "~", ".", "...", "?", "!"];
 
 function rand() { return Math.random(); }
 function choice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -260,7 +259,7 @@ function spamtonizeEN(text, intensity, filler, price) {
       if (rand() < 0.05 * intensity) {
         cw = cw.toUpperCase() + " " + choice(EN_REGARDS).toUpperCase();
       }
-      if (rand() < 0.18 * intensity) {
+      if (rand() < 0.1 * intensity) {
         const pick = choice(EN_BRACKET.filter(b => !usedB.has(b)) || EN_BRACKET);
         usedB.add(pick);
         nw.push(pick.includes("[") ? pick : "[[" + pick + "]]");
@@ -268,11 +267,11 @@ function spamtonizeEN(text, intensity, filler, price) {
       }
       nw.push(cw);
       i++;
-      if (i % 4 === 0 && rand() < 0.25 * intensity) nw.push(choice(EN_PUNCT));
+      if (i % 6 === 0 && rand() < 0.18 * intensity) nw.push(choice(EN_PUNCT));
     }
     let joined = nw.join(" ").replace(/\s+([,.;:!?])/g, "$1");
     joined = joined.replace(/[. ]+$/, "");
-    parts.push(joined + choice(["!!","!","...","!!","?!","??!"]));
+    parts.push(joined + choice([".", "...", "!", "?", "?", "...", "!"]));
   }
 
   let final = parts.join(" ");
@@ -304,18 +303,18 @@ function spamtonizeCN(text, intensity, filler, price) {
       cur = choice(CN_PRICES.filter(x => !usedP.has(x)) || CN_PRICES);
       usedP.add(cur);
     }
-    if (rand() < 0.06 * intensity) cur = cur + choice(["!!","??","!!!","(真的)"]);
-    if (rand() < 0.04 * intensity && cur.length === 1 && /[\u4e00-\u9fff]/.test(cur)) {
+    if (rand() < 0.06 * intensity) cur = cur + choice(["!", "?", "...", "."]);
+    if (rand() < 0.03 * intensity && cur.length === 1 && /[\u4e00-\u9fff]/.test(cur)) {
       cur = cur + cur;
     }
-    if (rand() < 0.1 * intensity) {
+    if (rand() < 0.06 * intensity) {
       const pick = choice(CN_BRACKET.filter(b => !usedB.has(b)) || CN_BRACKET);
       usedB.add(pick);
       built.push("[[" + pick + "]]");
     }
     built.push(cur);
     idx++;
-    if (idx % 5 === 0 && rand() < 0.2 * intensity) built.push(choice(CN_PUNCT));
+    if (idx % 6 === 0 && rand() < 0.14 * intensity) built.push(choice(CN_PUNCT));
   }
 
   let final = parts.join("") + built.join("");
