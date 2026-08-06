@@ -1,0 +1,126 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync web assets to native project
+        run: npx cap sync android
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+  build-exe:
+    name: Build Windows EXE
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build EXE
+        run: pyinstaller --noconfirm --onefile --windowed --name Spamtonizer desktop/spamtonizer.py
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: dist/Spamtonizer.exe
+          if-no-files-found: error
+
+  release:
+    name: Publish Release
+    needs: [build-apk, build-exe]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: release-files
+
+      - name: Download EXE
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-exe
+          path: release-files
+
+      - name: Get version
+        id: version
+        run: echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Rename artifacts
+        run: |
+          cd release-files
+          apk=$(ls *.apk)
+          exe=$(ls *.exe)
+          mv "$apk" "Spamtonizer-${apk}"
+          mv "$exe" "Spamtonizer-Windows-${exe}"
+          ls -la
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Spamtonizer ${{ steps.version.outputs.tag }}
+          body: |
+            Spamtonizer - Spamton 语气文字转换器 !!
+
+            - **Spamtonizer.exe**: Windows 桌面版
+            - **Spamtonizer-*.apk**: Android 安装包（需要允许"安装未知应用"）
+
+            中英双语自动识别，支持轻度/适中/疯狂三种 Spam 程度。
+          files: release-files/*
+          fail_on_unmatched_files: true
