@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Spamtonizer</string>
+    <string name="title_activity_main">Spamtonizer</string>
+    <string name="package_name">com.spamtonizer.app</string>
+    <string name="custom_url_scheme">com.spamtonizer.app</string>
+</resources>

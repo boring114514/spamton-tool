@@ -1,0 +1,6 @@
+{
+  "appId": "com.spamtonizer.app",
+  "appName": "Spamtonizer",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}

@@ -1,0 +1,17 @@
+{
+  "name": "spamtonizer",
+  "version": "1.0.0",
+  "description": "Spamton speak converter",
+  "private": true,
+  "scripts": {
+    "build": "echo build",
+    "start": "echo start"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  }
+}
